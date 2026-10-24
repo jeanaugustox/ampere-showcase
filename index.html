@@ -453,6 +453,7 @@
 
     track.addEventListener('pointerdown', event => {
       if (event.button !== 0) return;
+      if (event.target.closest('.zoom')) return;
       drag = { id: event.pointerId, startX: event.clientX, delta: 0 };
       suppressClick = false;
       track.classList.add('is-dragging');
