@@ -149,7 +149,14 @@
     .copy li { position: relative; padding: 8px 0 8px 16px; border-top: 1px solid var(--border); }
     .copy li::before { content: ""; position: absolute; top: 17px; left: 0; width: 6px; height: 6px; background: var(--green); }
 
-    .nav { display: grid; grid-template-columns: auto 1fr auto; align-items: center; gap: 14px; margin: 18px auto 0; max-width: var(--max); }
+    .nav {
+      display: grid;
+      grid-template-columns: auto 1fr auto;
+      align-items: center;
+      gap: 14px;
+      width: min(82vw, var(--max));
+      margin: 18px auto 0;
+    }
     .nav-button {
       min-width: 116px;
       padding: 10px 16px;
@@ -187,6 +194,7 @@
       .copy h2 { font-size: 21px; }
       .zoom { aspect-ratio: 16 / 10; }
       .nav { grid-template-columns: 1fr 1fr; }
+      .nav { width: 91vw; }
       .position { grid-column: 1 / -1; grid-row: 1; }
       .nav-button { min-width: 0; }
     }
