@@ -194,21 +194,23 @@
       position: relative;
       width: min(100%, 1600px);
     }
+    .modal-actions {
+      display: flex;
+      justify-content: flex-end;
+      padding-bottom: 10px;
+    }
     .image-modal img {
       display: block;
       width: 100%;
       max-width: 100%;
-      max-height: 90vh;
+      max-height: calc(90vh - 58px);
       border-radius: 12px;
       object-fit: contain;
       background: var(--white);
       box-shadow: 0 24px 70px rgba(0, 0, 0, .45);
     }
     .image-modal button {
-      position: absolute;
-      top: 12px;
-      right: 12px;
-      z-index: 2;
+      position: static;
       padding: 10px 16px;
       border: 1px solid rgba(255,255,255,.4);
       border-radius: 999px;
@@ -380,7 +382,7 @@
 
   <div class="image-modal" role="dialog" aria-modal="true" aria-label="Tela ampliada" hidden>
     <div class="modal-frame">
-      <button type="button" aria-label="Fechar imagem ampliada">Fechar</button>
+      <div class="modal-actions"><button type="button" aria-label="Fechar imagem ampliada">Fechar</button></div>
       <img alt="">
     </div>
   </div>
