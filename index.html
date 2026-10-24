@@ -1,0 +1,343 @@
+<!doctype html>
+<html lang="pt-BR">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Jornadas do AMPERE</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@400;500&family=IBM+Plex+Sans:wght@400;500;600&display=swap" rel="stylesheet">
+  <style>
+    :root {
+      --green: #00843d;
+      --green-dark: #004b32;
+      --green-soft: #e3f1e8;
+      --ink: #002b22;
+      --muted: #625f5c;
+      --sand: #fbf8f5;
+      --border: #ddd4cc;
+      --white: #fff;
+      --mono: "IBM Plex Mono", ui-monospace, Consolas, monospace;
+      --max: 1160px;
+    }
+
+    * { box-sizing: border-box; }
+    body {
+      margin: 0;
+      color: var(--ink);
+      background: var(--white);
+      font: 16px/1.5 "IBM Plex Sans", system-ui, sans-serif;
+      -webkit-font-smoothing: antialiased;
+    }
+    button { font: inherit; }
+    .page { max-width: 1280px; margin: 0 auto; padding: 28px 20px 36px; }
+    .eyebrow {
+      margin: 0 0 6px;
+      color: var(--green);
+      font: 500 12px/1.4 var(--mono);
+      letter-spacing: .13em;
+      text-transform: uppercase;
+    }
+    h1 { margin: 0; font-size: clamp(28px, 4vw, 44px); line-height: 1.08; }
+    .lead { max-width: 76ch; margin: 12px 0 22px; color: var(--muted); }
+
+    .filters { display: flex; flex-wrap: wrap; gap: 8px; margin-bottom: 18px; }
+    .filter {
+      border: 1px solid var(--border);
+      border-radius: 999px;
+      padding: 9px 15px;
+      color: var(--ink);
+      background: var(--white);
+      cursor: pointer;
+    }
+    .filter[aria-pressed="true"] { border-color: var(--green-dark); color: var(--white); background: var(--green-dark); }
+
+    .viewer { position: relative; max-width: var(--max); margin: 0 auto; }
+    .card {
+      display: none;
+      overflow: hidden;
+      border: 1px solid var(--border);
+      border-radius: 16px;
+      background: var(--white);
+      box-shadow: 0 16px 42px -24px rgba(0, 43, 34, .35);
+    }
+    .card.is-active { display: block; }
+    .browser-bar { display: flex; align-items: center; gap: 6px; padding: 9px 14px; border-bottom: 1px solid var(--border); }
+    .browser-bar i { width: 9px; height: 9px; border-radius: 50%; background: var(--border); }
+    .browser-bar span {
+      min-width: 0;
+      margin-left: 8px;
+      overflow: hidden;
+      color: var(--muted);
+      font: 12px var(--mono);
+      text-overflow: ellipsis;
+      white-space: nowrap;
+    }
+    .zoom {
+      display: block;
+      width: 100%;
+      aspect-ratio: 16 / 8.7;
+      padding: 0;
+      overflow: hidden;
+      border: 0;
+      border-bottom: 1px solid var(--border);
+      background: var(--sand);
+      cursor: zoom-in;
+    }
+    .zoom img { display: block; width: 100%; height: 100%; object-fit: contain; object-position: top center; }
+    .copy { display: grid; grid-template-columns: 1.3fr 1fr; gap: 28px; padding: 22px 26px 26px; }
+    .tag {
+      display: inline-block;
+      padding: 4px 10px;
+      border-radius: 999px;
+      color: var(--green-dark);
+      background: var(--green-soft);
+      font: 500 11px var(--mono);
+      letter-spacing: .07em;
+      text-transform: uppercase;
+    }
+    .copy h2 { margin: 10px 0 6px; font-size: 25px; line-height: 1.2; }
+    .copy p { margin: 0; color: var(--muted); }
+    .copy ul { align-self: end; margin: 0; padding: 0; list-style: none; }
+    .copy li { position: relative; padding: 8px 0 8px 16px; border-top: 1px solid var(--border); }
+    .copy li::before { content: ""; position: absolute; top: 17px; left: 0; width: 6px; height: 6px; background: var(--green); }
+
+    .nav { display: grid; grid-template-columns: auto 1fr auto; align-items: center; gap: 14px; margin: 18px auto 0; max-width: var(--max); }
+    .nav-button {
+      min-width: 116px;
+      padding: 10px 16px;
+      border: 1px solid var(--green);
+      border-radius: 999px;
+      color: var(--green);
+      background: var(--white);
+      cursor: pointer;
+    }
+    .nav-button.next { color: var(--white); background: var(--green); }
+    .nav-button:hover { border-color: var(--green-dark); color: var(--white); background: var(--green-dark); }
+    .position { text-align: center; }
+    .count { color: var(--muted); font: 13px var(--mono); }
+    .dots { display: flex; justify-content: center; flex-wrap: wrap; gap: 7px; margin-top: 8px; }
+    .dot { width: 9px; height: 9px; padding: 0; border: 0; border-radius: 99px; background: var(--border); cursor: pointer; }
+    .dot[aria-current="true"] { width: 28px; background: var(--green); }
+
+    footer { max-width: var(--max); margin: 24px auto 0; padding-top: 16px; border-top: 1px solid var(--border); color: var(--muted); font-size: 14px; }
+    footer strong { color: var(--ink); }
+
+    dialog { width: min(96vw, 1600px); max-height: 94vh; padding: 0; border: 0; border-radius: 12px; overflow: auto; background: var(--white); }
+    dialog::backdrop { background: rgba(0, 32, 21, .78); }
+    dialog img { display: block; width: 100%; height: auto; }
+    dialog button { position: sticky; top: 10px; z-index: 2; float: right; margin: 10px; padding: 8px 14px; border: 0; border-radius: 8px; color: var(--white); background: var(--ink); cursor: pointer; }
+
+    :focus-visible { outline: 3px solid #ff9d1c; outline-offset: 3px; }
+    @media (max-width: 760px) {
+      .page { padding-inline: 12px; }
+      .copy { grid-template-columns: 1fr; padding: 17px; }
+      .copy h2 { font-size: 21px; }
+      .zoom { aspect-ratio: 16 / 10; }
+      .nav { grid-template-columns: 1fr 1fr; }
+      .position { grid-column: 1 / -1; grid-row: 1; }
+      .nav-button { min-width: 0; }
+    }
+    @media (prefers-reduced-motion: reduce) { * { scroll-behavior: auto !important; } }
+  </style>
+</head>
+<body>
+  <main class="page">
+    <p class="eyebrow">Entrega 04 · AMPERE</p>
+    <h1>Jornadas implementadas</h1>
+    <p class="lead">Explore as telas do sistema por jornada. Use os filtros, as setas ou o teclado; clique na imagem para ampliá-la.</p>
+
+    <nav class="filters" aria-label="Filtrar telas por jornada">
+      <button class="filter" type="button" data-filter="all" aria-pressed="true">Todas</button>
+      <button class="filter" type="button" data-filter="acesso" aria-pressed="false">Acesso</button>
+      <button class="filter" type="button" data-filter="projetista" aria-pressed="false">Projetista</button>
+      <button class="filter" type="button" data-filter="analista" aria-pressed="false">Analista</button>
+      <button class="filter" type="button" data-filter="normas" aria-pressed="false">Normas</button>
+    </nav>
+
+    <section class="viewer" aria-roledescription="carrossel" aria-label="Telas do sistema AMPERE">
+      <div class="cards">
+        <article class="card" data-category="acesso" aria-label="Login">
+          <div class="browser-bar"><i></i><i></i><i></i><span>AMPERE / acesso</span></div>
+          <button class="zoom" type="button" aria-label="Ampliar Login"><img src="assets/01-login.png" alt="Tela de login do AMPERE"></button>
+          <div class="copy"><div><span class="tag">Acesso</span><h2>Login</h2><p>Entrada única que direciona cada pessoa para a jornada correspondente ao seu perfil.</p></div><ul><li>Autenticação por e-mail e senha.</li><li>Separação entre projetista e analista.</li></ul></div>
+        </article>
+
+        <article class="card" data-category="projetista" aria-label="Meus Projetos">
+          <div class="browser-bar"><i></i><i></i><i></i><span>Projetista / visão geral</span></div>
+          <button class="zoom" type="button" aria-label="Ampliar Meus Projetos"><img src="assets/02-meus-projetos.png" alt="Listagem Meus Projetos"></button>
+          <div class="copy"><div><span class="tag">Projetista</span><h2>Meus Projetos</h2><p>Painel com indicadores, busca, situações e acessos para continuar ou corrigir cada projeto.</p></div><ul><li>Projetos restritos ao proprietário.</li><li>Acompanhamento de rascunhos, análises, reprovações e aprovações.</li></ul></div>
+        </article>
+
+        <article class="card" data-category="projetista" aria-label="Dados da Edificação">
+          <div class="browser-bar"><i></i><i></i><i></i><span>Projetista / etapa 01</span></div>
+          <button class="zoom" type="button" aria-label="Ampliar Dados da Edificação"><img src="assets/03-dados-edificacao.png" alt="Formulário Dados da Edificação"></button>
+          <div class="copy"><div><span class="tag">Projetista · Etapa 01</span><h2>Dados da Edificação</h2><p>Cadastro da identificação, endereço e parâmetros técnicos que determinam a norma aplicável.</p></div><ul><li>Preenchimento acompanhado em tempo real.</li><li>Norma derivada automaticamente.</li></ul></div>
+        </article>
+
+        <article class="card" data-category="projetista" aria-label="Unidades Consumidoras">
+          <div class="browser-bar"><i></i><i></i><i></i><span>Projetista / etapa 02</span></div>
+          <button class="zoom" type="button" aria-label="Ampliar Unidades Consumidoras"><img src="assets/04-unidades-consumidoras.png" alt="Tela de Unidades Consumidoras"></button>
+          <div class="copy"><div><span class="tag">Projetista · Etapa 02</span><h2>Unidades Consumidoras</h2><p>Organização das unidades em grupos, com carga instalada, fator aplicado e validação imediata.</p></div><ul><li>Pendências impedem o cálculo.</li><li>Grupos podem ser adicionados e corrigidos.</li></ul></div>
+        </article>
+
+        <article class="card" data-category="projetista" aria-label="Cálculo de Demanda">
+          <div class="browser-bar"><i></i><i></i><i></i><span>Projetista / etapa 03</span></div>
+          <button class="zoom" type="button" aria-label="Ampliar Cálculo de Demanda"><img src="assets/05-calculo-demanda.png" alt="Decomposição do cálculo de demanda"></button>
+          <div class="copy"><div><span class="tag">Projetista · Etapa 03</span><h2>Cálculo de Demanda</h2><p>Memória passo a passo com parcelas, fatores normativos e resultado consolidado.</p></div><ul><li>Rastreabilidade dos valores utilizados.</li><li>Resultado em kVA e dimensionamento da entrada.</li></ul></div>
+        </article>
+
+        <article class="card" data-category="projetista" aria-label="Memorial de Cálculo">
+          <div class="browser-bar"><i></i><i></i><i></i><span>Projetista / etapa 04</span></div>
+          <button class="zoom" type="button" aria-label="Ampliar Memorial de Cálculo"><img src="assets/06-memorial-calculo.png" alt="Memorial de cálculo gerado"></button>
+          <div class="copy"><div><span class="tag">Projetista · Etapa 04</span><h2>Memorial de Cálculo</h2><p>Documento técnico padronizado gerado a partir dos dados e do cálculo do projeto.</p></div><ul><li>Resumo das etapas calculadas.</li><li>Checagem dos itens obrigatórios.</li></ul></div>
+        </article>
+
+        <article class="card" data-category="projetista" aria-label="Documentos e Checagem">
+          <div class="browser-bar"><i></i><i></i><i></i><span>Projetista / documentos</span></div>
+          <button class="zoom" type="button" aria-label="Ampliar Documentos e Checagem"><img src="assets/07-documentos-checagem.png" alt="Documentos anexados e checagem antes do envio"></button>
+          <div class="copy"><div><span class="tag">Projetista · Documentos</span><h2>Documentos e Checagem</h2><p>Conferência do memorial, ART, diagrama unifilar e planta de situação antes do envio.</p></div><ul><li>Arquivos podem ser substituídos.</li><li>Checklist indica se o projeto está completo.</li></ul></div>
+        </article>
+
+        <article class="card" data-category="projetista" aria-label="Enviar Projeto">
+          <div class="browser-bar"><i></i><i></i><i></i><span>Projetista / etapa 05</span></div>
+          <button class="zoom" type="button" aria-label="Ampliar Enviar Projeto"><img src="assets/08-enviar-projeto.png" alt="Revisão final com botão Enviar para Análise"></button>
+          <div class="copy"><div><span class="tag">Projetista · Etapa 05</span><h2>Revisão e Envio</h2><p>Última conferência do memorial e submissão do projeto para análise técnica.</p></div><ul><li>Visualização e download do PDF.</li><li>Envio somente após concluir os requisitos.</li></ul></div>
+        </article>
+
+        <article class="card" data-category="projetista" aria-label="Apontamentos Recebidos">
+          <div class="browser-bar"><i></i><i></i><i></i><span>Projetista / correções solicitadas</span></div>
+          <button class="zoom" type="button" aria-label="Ampliar Apontamentos Recebidos"><img src="assets/09-apontamentos.png" alt="Lista de apontamentos recebidos pelo projetista"></button>
+          <div class="copy"><div><span class="tag">Projetista · Correção</span><h2>Apontamentos Recebidos</h2><p>Projetos reprovados apresentam parecer, gravidade e etapa relacionada a cada correção.</p></div><ul><li>Atalho direto para a etapa afetada.</li><li>Ações Corrigido e Contestar.</li></ul></div>
+        </article>
+
+        <article class="card" data-category="projetista" aria-label="Marcar como Corrigido">
+          <div class="browser-bar"><i></i><i></i><i></i><span>Projetista / resposta ao apontamento</span></div>
+          <button class="zoom" type="button" aria-label="Ampliar Marcar como Corrigido"><img src="assets/10-apontamento-corrigido.png" alt="Formulário para confirmar correção"></button>
+          <div class="copy"><div><span class="tag">Projetista · Resposta</span><h2>Marcar como Corrigido</h2><p>O projetista confirma a correção e pode registrar onde a alteração foi realizada.</p></div><ul><li>Observação opcional.</li><li>Resposta vinculada ao apontamento original.</li></ul></div>
+        </article>
+
+        <article class="card" data-category="projetista" aria-label="Contestar Apontamento">
+          <div class="browser-bar"><i></i><i></i><i></i><span>Projetista / contestação</span></div>
+          <button class="zoom" type="button" aria-label="Ampliar Contestar Apontamento"><img src="assets/11-contestar-apontamento.png" alt="Formulário de contestação de apontamento"></button>
+          <div class="copy"><div><span class="tag">Projetista · Resposta</span><h2>Contestar Apontamento</h2><p>Quando entende que o item já está adequado, o projetista envia uma justificativa ao analista.</p></div><ul><li>Justificativa obrigatória.</li><li>Resposta registrada para a reanálise.</li></ul></div>
+        </article>
+
+        <article class="card" data-category="projetista" aria-label="Reenviar Projeto">
+          <div class="browser-bar"><i></i><i></i><i></i><span>Projetista / reenvio</span></div>
+          <button class="zoom" type="button" aria-label="Ampliar Reenviar Projeto"><img src="assets/12-reenvio-projeto.png" alt="Resumo das alterações e botão Reenviar Projeto"></button>
+          <div class="copy"><div><span class="tag">Projetista · Reenvio</span><h2>Resumo e Reenvio</h2><p>Após responder aos apontamentos, o projetista descreve as alterações e envia uma nova versão.</p></div><ul><li>Resumo obrigatório das mudanças.</li><li>Novo ciclo preserva o histórico anterior.</li></ul></div>
+        </article>
+
+        <article class="card" data-category="analista" aria-label="Fila de Análise">
+          <div class="browser-bar"><i></i><i></i><i></i><span>Analista / fila</span></div>
+          <button class="zoom" type="button" aria-label="Ampliar Fila de Análise"><img src="assets/13-fila-analise.png" alt="Fila de análise com indicadores e projetos"></button>
+          <div class="copy"><div><span class="tag">Analista</span><h2>Fila de Análise</h2><p>Priorização dos projetos por prazo, demanda, alertas e ciclo de análise.</p></div><ul><li>Busca, filtros e ordenação.</li><li>Indicadores operacionais da fila.</li></ul></div>
+        </article>
+
+        <article class="card" data-category="analista" aria-label="Análise do Projeto">
+          <div class="browser-bar"><i></i><i></i><i></i><span>Analista / análise técnica</span></div>
+          <button class="zoom" type="button" aria-label="Ampliar Análise do Projeto"><img src="assets/14-analise-projeto.png" alt="Análise técnica e formulário de apontamento"></button>
+          <div class="copy"><div><span class="tag">Analista · Análise</span><h2>Análise do Projeto</h2><p>Consulta integrada da memória, unidades, documentos, histórico e verificações automáticas.</p></div><ul><li>Registro estruturado de apontamentos.</li><li>Gravidade, etapa, descrição e item normativo.</li></ul></div>
+        </article>
+
+        <article class="card" data-category="analista" aria-label="Decisão da Análise">
+          <div class="browser-bar"><i></i><i></i><i></i><span>Analista / decisão</span></div>
+          <button class="zoom" type="button" aria-label="Ampliar Decisão da Análise"><img src="assets/15-decisao-analise.png" alt="Ações de aprovar ou reprovar projeto"></button>
+          <div class="copy"><div><span class="tag">Analista · Decisão</span><h2>Decisão da Análise</h2><p>Ao concluir a conferência, o analista aprova o projeto ou o devolve com apontamentos.</p></div><ul><li>Contagem de pendências e bloqueantes.</li><li>Reprovação condicionada a apontamentos registrados.</li></ul></div>
+        </article>
+
+        <article class="card" data-category="analista" aria-label="Reanálise do Projeto">
+          <div class="browser-bar"><i></i><i></i><i></i><span>Analista / reanálise</span></div>
+          <button class="zoom" type="button" aria-label="Ampliar Reanálise do Projeto"><img src="assets/16-reanalise.png" alt="Projeto em reanálise, versão 2 e resumo das alterações"></button>
+          <div class="copy"><div><span class="tag">Analista · Reanálise</span><h2>Reanálise do Projeto</h2><p>A nova versão destaca o ciclo de reanálise e o resumo das alterações enviado pelo projetista.</p></div><ul><li>Versão e recebimento atualizados.</li><li>Histórico técnico preservado.</li></ul></div>
+        </article>
+
+        <article class="card" data-category="analista" aria-label="Respostas na Reanálise">
+          <div class="browser-bar"><i></i><i></i><i></i><span>Analista / respostas anteriores</span></div>
+          <button class="zoom" type="button" aria-label="Ampliar Respostas na Reanálise"><img src="assets/17-respostas-reanalise.png" alt="Respostas do projetista aos apontamentos anteriores"></button>
+          <div class="copy"><div><span class="tag">Analista · Reanálise</span><h2>Respostas aos Apontamentos</h2><p>O analista verifica cada resposta anterior e decide aceitar a correção ou reabrir o item.</p></div><ul><li>Resposta e data ficam registradas.</li><li>Aceite ou reabertura por apontamento.</li></ul></div>
+        </article>
+
+        <article class="card" data-category="normas" aria-label="Tabelas Normativas">
+          <div class="browser-bar"><i></i><i></i><i></i><span>Administração / normas</span></div>
+          <button class="zoom" type="button" aria-label="Ampliar Tabelas Normativas"><img src="assets/18-tabelas-normativas.png" alt="Listagem das tabelas normativas"></button>
+          <div class="copy"><div><span class="tag">Normas</span><h2>Tabelas Normativas</h2><p>Catálogo versionado dos parâmetros utilizados automaticamente nos cálculos de demanda.</p></div><ul><li>Situação, cadastro e revisão.</li><li>Rastreabilidade até norma, item e página.</li></ul></div>
+        </article>
+
+        <article class="card" data-category="normas" aria-label="Detalhe da Tabela">
+          <div class="browser-bar"><i></i><i></i><i></i><span>Administração / detalhe normativo</span></div>
+          <button class="zoom" type="button" aria-label="Ampliar Detalhe da Tabela"><img src="assets/19-detalhe-tabela.png" alt="Detalhes e linhas de uma tabela normativa"></button>
+          <div class="copy"><div><span class="tag">Normas</span><h2>Detalhe da Tabela</h2><p>Visualização das faixas e fatores vigentes, com identificação de cadastro e revisão.</p></div><ul><li>Valores utilizados pelo motor de cálculo.</li><li>Separação entre responsável pelo cadastro e revisor.</li></ul></div>
+        </article>
+      </div>
+    </section>
+
+    <div class="nav" aria-label="Navegação do carrossel">
+      <button class="nav-button prev" type="button">← Anterior</button>
+      <div class="position"><span class="count" aria-live="polite"></span><div class="dots"></div></div>
+      <button class="nav-button next" type="button">Próxima →</button>
+    </div>
+
+    <footer><strong>AMPERE — Projetos Elétricos.</strong> Fluxo demonstrativo com dados do ambiente local, organizado pelas jornadas do projetista, do analista e da gestão normativa.</footer>
+  </main>
+
+  <dialog aria-label="Tela ampliada"><button type="button" autofocus>Fechar</button><img alt=""></dialog>
+
+  <script>
+    const allCards = [...document.querySelectorAll('.card')];
+    const filters = [...document.querySelectorAll('.filter')];
+    const dotsBox = document.querySelector('.dots');
+    const count = document.querySelector('.count');
+    const dialog = document.querySelector('dialog');
+    const dialogImage = dialog.querySelector('img');
+    let visible = allCards;
+    let current = 0;
+
+    const pad = value => String(value).padStart(2, '0');
+    const render = () => {
+      allCards.forEach(card => card.classList.remove('is-active'));
+      if (!visible.length) return;
+      current = (current + visible.length) % visible.length;
+      visible[current].classList.add('is-active');
+      count.textContent = `${pad(current + 1)} / ${pad(visible.length)} · ${visible[current].getAttribute('aria-label')}`;
+      dotsBox.replaceChildren(...visible.map((card, index) => {
+        const dot = document.createElement('button');
+        dot.type = 'button';
+        dot.className = 'dot';
+        dot.setAttribute('aria-label', `Abrir ${card.getAttribute('aria-label')}`);
+        dot.setAttribute('aria-current', String(index === current));
+        dot.addEventListener('click', () => { current = index; render(); });
+        return dot;
+      }));
+    };
+
+    const go = delta => { current += delta; render(); };
+    document.querySelector('.prev').addEventListener('click', () => go(-1));
+    document.querySelector('.next').addEventListener('click', () => go(1));
+    document.addEventListener('keydown', event => {
+      if (dialog.open) return;
+      if (event.key === 'ArrowLeft') go(-1);
+      if (event.key === 'ArrowRight') go(1);
+    });
+
+    filters.forEach(button => button.addEventListener('click', () => {
+      filters.forEach(item => item.setAttribute('aria-pressed', String(item === button)));
+      const category = button.dataset.filter;
+      visible = category === 'all' ? allCards : allCards.filter(card => card.dataset.category === category);
+      current = 0;
+      render();
+    }));
+
+    document.querySelectorAll('.zoom').forEach(button => button.addEventListener('click', () => {
+      const image = button.querySelector('img');
+      dialogImage.src = image.src;
+      dialogImage.alt = image.alt;
+      dialog.showModal();
+    }));
+    dialog.querySelector('button').addEventListener('click', () => dialog.close());
+    dialog.addEventListener('click', event => { if (event.target === dialog) dialog.close(); });
+    render();
+  </script>
+</body>
+</html>
