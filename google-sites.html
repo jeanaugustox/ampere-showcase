@@ -178,10 +178,38 @@
     footer { max-width: var(--max); margin: 24px auto 0; padding-top: 16px; border-top: 1px solid var(--border); color: var(--muted); font-size: 14px; text-align: center; }
     footer strong { color: var(--ink); }
 
-    dialog { width: min(96vw, 1600px); max-height: 94vh; padding: 0; border: 0; border-radius: 12px; overflow: auto; background: var(--white); }
-    dialog::backdrop { background: rgba(0, 32, 21, .78); }
-    dialog img { display: block; width: 100%; height: auto; }
-    dialog button { position: sticky; top: 10px; z-index: 2; float: right; margin: 10px; padding: 8px 14px; border: 0; border-radius: 8px; color: var(--white); background: var(--ink); cursor: pointer; }
+    .image-modal[hidden] { display: none; }
+    .image-modal {
+      position: fixed;
+      inset: 0;
+      z-index: 1000;
+      display: grid;
+      place-items: center;
+      padding: 24px;
+      overflow: auto;
+      background: rgba(0, 32, 21, .82);
+    }
+    .image-modal img {
+      display: block;
+      width: min(96vw, 1600px);
+      max-height: 90vh;
+      border-radius: 12px;
+      object-fit: contain;
+      background: var(--white);
+      box-shadow: 0 24px 70px rgba(0, 0, 0, .45);
+    }
+    .image-modal button {
+      position: fixed;
+      top: 18px;
+      right: 18px;
+      z-index: 2;
+      padding: 10px 16px;
+      border: 1px solid rgba(255,255,255,.4);
+      border-radius: 999px;
+      color: var(--white);
+      background: var(--ink);
+      cursor: pointer;
+    }
 
     :focus-visible { outline: 3px solid #ff9d1c; outline-offset: 3px; }
     @media (max-width: 760px) {
@@ -344,7 +372,10 @@
     <footer><strong>AMPERE — Projetos Elétricos.</strong> Telas construídas até o momento, organizadas pelos perfis de projetista e analista e pela área de gestão normativa.</footer>
   </main>
 
-  <dialog aria-label="Tela ampliada"><button type="button" autofocus>Fechar</button><img alt=""></dialog>
+  <div class="image-modal" role="dialog" aria-modal="true" aria-label="Tela ampliada" hidden>
+    <button type="button" aria-label="Fechar imagem ampliada">Fechar</button>
+    <img alt="">
+  </div>
 
   <script>
     const allCards = [...document.querySelectorAll('.card')];
@@ -353,8 +384,8 @@
     const viewer = document.querySelector('.viewer');
     const dotsBox = document.querySelector('.dots');
     const count = document.querySelector('.count');
-    const dialog = document.querySelector('dialog');
-    const dialogImage = dialog.querySelector('img');
+    const imageModal = document.querySelector('.image-modal');
+    const dialogImage = imageModal.querySelector('img');
     let visible = allCards;
     let current = 0;
     let step = 0;
@@ -404,7 +435,10 @@
     document.querySelector('.next').addEventListener('click', () => go(1));
     document.querySelectorAll('[data-go]').forEach(button => button.addEventListener('click', () => go(Number(button.dataset.go))));
     document.addEventListener('keydown', event => {
-      if (dialog.open) return;
+      if (!imageModal.hidden) {
+        if (event.key === 'Escape') closeImage();
+        return;
+      }
       if (event.key === 'ArrowLeft') go(-1);
       if (event.key === 'ArrowRight') go(1);
     });
@@ -462,10 +496,16 @@
       const image = button.querySelector('img');
       dialogImage.src = image.src;
       dialogImage.alt = image.alt;
-      dialog.showModal();
+      imageModal.hidden = false;
+      document.body.style.overflow = 'hidden';
+      imageModal.querySelector('button').focus();
     }));
-    dialog.querySelector('button').addEventListener('click', () => dialog.close());
-    dialog.addEventListener('click', event => { if (event.target === dialog) dialog.close(); });
+    function closeImage() {
+      imageModal.hidden = true;
+      document.body.style.overflow = '';
+    }
+    imageModal.querySelector('button').addEventListener('click', closeImage);
+    imageModal.addEventListener('click', event => { if (event.target === imageModal) closeImage(); });
     render();
   </script>
 </body>
